@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-агенты, которые сами находят клиентов — вариант 6</title>
+<meta name="description" content="Цифровые продажники — ищут, анализируют, пишут и отвечают. Поток клиентов без раздувания штата.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05070c;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.09);
+    --text: #eaf0f8;
+    --muted: #8b99ad;
+    --cyan: #22d3ee;
+    --cyan-2: #7ce7f7;
+    --violet: #8b5cf6;
+    --violet-2: #b39dfb;
+    --font-display: "Unbounded", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: rgba(34, 211, 238, 0.3); }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  /* общие фоновые слои */
+  .dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(124, 231, 247, 0.14) 1px, transparent 1.5px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
+    pointer-events: none;
+  }
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 38%, rgba(5, 7, 12, 0.88) 100%);
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     БЛОК 1 — ЗЕМЛЯ (скролл-скраб, заканчивается скроллом)
+     ============================================================ */
+  .hero {
+    position: relative;
+    height: 300vh;
+    background: var(--bg);
+  }
+  .hero__sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .earth-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vmin;
+    height: 100vmin;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.17) 0%, rgba(34, 211, 238, 0) 65%);
+    pointer-events: none;
+  }
+  .earth-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    filter: saturate(1.1) contrast(1.05);
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 720px;
+    padding: 0 24px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(26px);
+    will-change: opacity, transform;
+  }
+  .hero-content .eyebrow { color: var(--cyan-2); }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 5.5vw, 60px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+  }
+  .hero-title span {
+    background: linear-gradient(90deg, var(--cyan-2), var(--cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-subtitle {
+    color: var(--muted);
+    font-size: 18px;
+    max-width: 520px;
+    margin: 0 auto 34px;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.7);
+  }
+  .cta {
+    display: inline-block;
+    padding: 15px 32px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cyan), #0ea5c8);
+    color: #021014;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(34, 211, 238, 0.35); }
+
+  /* стрелка — в самом верху */
+  .scroll-hint {
+    position: absolute;
+    top: 6vh;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 6;
+    text-decoration: none;
+    color: var(--muted);
+    will-change: opacity;
+  }
+  .scroll-hint__ring {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(124, 231, 247, 0.4);
+    animation: breathe 2.6s ease-in-out infinite;
+  }
+  .scroll-hint__ring::before {
+    content: "";
+    position: absolute;
+    inset: -7px;
+    border-radius: 50%;
+    border: 1px dashed rgba(124, 231, 247, 0.45);
+    animation: spin 14s linear infinite;
+  }
+  .scroll-hint__chevron {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 13px;
+    height: 13px;
+    border-right: 2.5px solid var(--cyan-2);
+    border-bottom: 2.5px solid var(--cyan-2);
+    transform: translate(-50%, -62%) rotate(45deg);
+    animation: bob 1.7s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.9));
+  }
+  .scroll-hint__label {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes bob {
+    0%, 100% { transform: translate(-50%, -62%) rotate(45deg); }
+    50% { transform: translate(-50%, -32%) rotate(45deg); }
+  }
+  @keyframes breathe {
+    0%, 100% { box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
+    50% { box-shadow: 0 0 28px rgba(34, 211, 238, 0.5); }
+  }
+
+  /* ============================================================
+     БЛОК 2 — МОЗГ (видео + описание, та же стилистика)
+     ============================================================ */
+  .brain {
+    position: relative;
+    height: 240vh;
+    background: var(--bg);
+  }
+  .brain__sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brain-dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(179, 157, 251, 0.14) 1px, transparent 1.5px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%);
+    mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%);
+    pointer-events: none;
+  }
+  .brain-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 90vmin;
+    height: 90vmin;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.20) 0%, rgba(139, 92, 246, 0) 66%);
+    filter: blur(18px);
+    pointer-events: none;
+  }
+  .brain-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    filter: saturate(1.1);
+    opacity: 0.85;
+  }
+  .brain-head {
+    position: absolute;
+    top: 7vh;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: min(1100px, 92vw);
+    text-align: center;
+    z-index: 3;
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+  .brain-head .eyebrow { color: var(--violet-2); }
+  .brain-head h2 {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 4vw, 42px);
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .brain-lead {
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .brain-cards {
+    position: absolute;
+    bottom: 7vh;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: min(1100px, 92vw);
+    z-index: 3;
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    text-align: left;
+  }
+  .card {
+    background: rgba(8, 12, 20, 0.55);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px 24px;
+    backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+  }
+  .card:hover { border-color: rgba(179, 157, 251, 0.35); background: var(--surface-hover); transform: translateY(-4px); }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--violet), transparent);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .card:hover::before { opacity: 1; }
+  .card__num {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--violet-2);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+  .card p { color: var(--muted); font-size: 15px; font-weight: 500; }
+
+  /* ============================================================
+     БЛОК 3 — КОНТАКТЫ / ЗАЯВКА
+     ============================================================ */
+  .contact {
+    position: relative;
+    padding: 130px 8vw 110px;
+    text-align: center;
+    background: var(--bg);
+  }
+  .contact__dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(124, 231, 247, 0.12) 1px, transparent 1.5px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+    pointer-events: none;
+  }
+  .contact__inner { position: relative; z-index: 2; max-width: 520px; margin: 0 auto; }
+  .contact .eyebrow { color: var(--cyan-2); }
+  .contact h2 {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 4vw, 40px);
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .contact__lead { color: var(--muted); margin-bottom: 40px; font-size: 17px; }
+
+  .form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+  .form input[type="text"],
+  .form input[type="email"],
+  .form input[type="tel"] {
+    width: 100%;
+    padding: 15px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .form input::placeholder { color: #5b6a7d; }
+  .form input:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+  }
+  .form__consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .form__consent input { margin-top: 3px; accent-color: var(--cyan); }
+  .form__consent a { color: var(--cyan-2); }
+  .form button {
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cyan), #0ea5c8);
+    color: #021014;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+  .form button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(34, 211, 238, 0.35);
+  }
+  .form button:disabled { opacity: 0.6; cursor: default; }
+  .form__status { font-size: 14px; text-align: center; min-height: 20px; color: var(--cyan-2); }
+
+  .contact__info {
+    margin-top: 44px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 28px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .contact__info a { color: var(--text); text-decoration: none; }
+  .contact__info a:hover { color: var(--cyan-2); }
+  .contact__info .label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #5b6a7d;
+    margin-bottom: 4px;
+  }
+
+  /* ============ АДАПТИВ ============ */
+  @media (max-width: 900px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .scroll-hint__ring::before,
+    .scroll-hint__chevron,
+    .scroll-hint__ring { animation: none; }
+    .hero-content, .brain-head, .brain-cards { opacity: 1 !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ═══════════ БЛОК 1 — ЗЕМЛЯ ═══════════ -->
+  <section class="hero" id="hero">
+    <div class="hero__sticky">
+      <div class="dots"></div>
+      <div class="earth-glow"></div>
+      <video id="planetVideo" class="earth-video" muted playsinline preload="auto" poster="assets/planet-poster.jpg">
+        <source src="assets/planet.mp4" type="video/mp4">
+      </video>
+      <div class="vignette"></div>
+
+      <div class="hero-content" id="heroContent">
+        <p class="eyebrow">AI · автоматизация продаж</p>
+        <h1 class="hero-title">AI-агенты, которые <span>сами находят клиентов</span></h1>
+        <p class="hero-subtitle">Цифровые продажники — ищут, анализируют, пишут письма и отвечают. Поток клиентов без раздувания штата и рутины.</p>
+        <a class="cta" href="#contact">Оставить заявку</a>
+      </div>
+
+      <a class="scroll-hint" id="scrollHint" href="#brain" aria-label="Крутите вниз">
+        <span class="scroll-hint__label">крути вниз</span>
+        <span class="scroll-hint__ring"><span class="scroll-hint__chevron"></span></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══════════ БЛОК 2 — МОЗГ + ОПИСАНИЕ ═══════════ -->
+  <section class="brain" id="brain">
+    <div class="brain__sticky">
+      <div class="brain-dots"></div>
+      <div class="brain-glow"></div>
+      <video id="brainVideo" class="brain-video" muted loop playsinline autoplay poster="assets/brain-poster.jpg">
+        <source src="assets/brain.mp4" type="video/mp4">
+      </video>
+      <div class="vignette"></div>
+
+      <div class="brain-head" id="brainHead">
+        <p class="eyebrow">Что мы делаем</p>
+        <h2>Три направления, которые продают за вас</h2>
+        <p class="brain-lead">Подключаем AI к каждому этапу продаж — от поиска клиента до готового лендинга.</p>
+      </div>
+
+      <div class="brain-cards" id="brainCards">
+        <div class="cards">
+          <article class="card">
+            <div class="card__num">01</div>
+            <h3>AI-продавцы</h3>
+            <p>Цифровые продажники сами ищут клиентов, находят контакты, анализируют, подходит ли компания, пишут письма и отвечают.</p>
+          </article>
+          <article class="card">
+            <div class="card__num">02</div>
+            <h3>Цифровой след</h3>
+            <p>Улучшаем цифровой след компании: посты в нужных источниках и перенастройка сайта — чтобы вас находили.</p>
+          </article>
+          <article class="card">
+            <div class="card__num">03</div>
+            <h3>Создание лендинга</h3>
+            <p>Разрабатываем лендинг, который превращает трафик в заявки и продаёт вместо вас.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ БЛОК 3 — КОНТАКТЫ / ЗАЯВКА ═══════════ -->
+  <section class="contact" id="contact">
+    <div class="contact__dots"></div>
+    <div class="contact__inner">
+      <p class="eyebrow">Свяжитесь с нами</p>
+      <h2>Готовы запустить цифровых продажников?</h2>
+      <p class="contact__lead">Оставьте заявку — вернёмся с планом в течение 24 часов.</p>
+
+      <form class="form" id="leadForm" novalidate>
+        <input type="text" name="name" placeholder="Ваше имя" required autocomplete="name">
+        <input type="text" name="contact" placeholder="Телефон / Telegram / email" required autocomplete="tel">
+        <label class="form__consent">
+          <input type="checkbox" name="consent" required>
+          <span>Согласен(на) с <a href="#" onclick="return false;">политикой конфиденциальности</a></span>
+        </label>
+        <button type="submit">Оставить заявку</button>
+        <div class="form__status" id="formStatus" aria-live="polite"></div>
+      </form>
+
+      <div class="contact__info">
+        <div><span class="label">Telegram</span><a href="https://t.me/your_username">@your_username</a></div>
+        <div><span class="label">Email</span><a href="mailto:hello@yourdomain.com">hello@yourdomain.com</a></div>
+        <div><span class="label">Телефон</span><a href="tel:+700****0000">+7 (000) 000-00-00</a></div>
+      </div>
+    </div>
+  </section>
+
+<script>
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  function smoothstep(a, b, x) {
+    const t = clamp((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+  function progressOf(el) {
+    const rect = el.getBoundingClientRect();
+    const total = el.offsetHeight - window.innerHeight;
+    return total > 0 ? clamp(-rect.top / total, 0, 1) : 0;
+  }
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isDesktop = window.matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
+  const scrubEnabled = isDesktop && !reduceMotion;
+
+  // =====================================================================
+  // БЛОК 1: Земля — скраб + текст + стрелка (сверху)
+  // =====================================================================
+  (function () {
+    const hero = document.getElementById('hero');
+    const video = document.getElementById('planetVideo');
+    const content = document.getElementById('heroContent');
+    const hint = document.getElementById('scrollHint');
+
+    let targetTime = 0;
+    if (!scrubEnabled) { video.loop = true; video.play().catch(() => {}); }
+    video.addEventListener('loadedmetadata', () => {
+      if (scrubEnabled) video.currentTime = 0.001;
+      update();
+    });
+
+    function update() {
+      const p = progressOf(hero);
+      if (scrubEnabled) targetTime = p * (video.duration - 0.02);
+      const t = smoothstep(0.10, 0.35, p);
+      content.style.opacity = t;
+      content.style.transform = 'translateY(' + (1 - t) * 26 + 'px)';
+      hint.style.opacity = 1 - smoothstep(0.0, 0.14, p);
+    }
+
+    function scrubLoop() {
+      if (scrubEnabled && video.readyState >= 2 && video.duration) {
+        const diff = targetTime - video.currentTime;
+        if (Math.abs(diff) > 0.01) video.currentTime += diff * 0.25;
+      }
+      requestAnimationFrame(scrubLoop);
+    }
+    requestAnimationFrame(scrubLoop);
+
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); updateBrain(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+  })();
+
+  // =====================================================================
+  // БЛОК 2: Мозг — контент проявляется скроллом
+  // =====================================================================
+  let updateBrain = function () {};
+  (function () {
+    const brain = document.getElementById('brain');
+    const head = document.getElementById('brainHead');
+    const cards = document.getElementById('brainCards');
+    updateBrain = function () {
+      const p = progressOf(brain);
+      const th = smoothstep(0.12, 0.35, p);
+      const tc = smoothstep(0.20, 0.45, p);
+      head.style.opacity = th;
+      head.style.transform = 'translateY(' + (1 - th) * -20 + 'px)';
+      cards.style.opacity = tc;
+      cards.style.transform = 'translateY(' + (1 - tc) * 30 + 'px)';
+    };
+    updateBrain();
+  })();
+
+  // =====================================================================
+  // Страховка автозапуска фонового видео мозга
+  // =====================================================================
+  (function () {
+    const v = document.getElementById('brainVideo');
+    if (v) v.play().catch(() => {});
+  })();
+
+  // =====================================================================
+  // БЛОК 3: форма заявки
+  // =====================================================================
+  (function () {
+    const form = document.getElementById('leadForm');
+    const status = document.getElementById('formStatus');
+    const ENDPOINT = ''; // TODO: endpoint (Telegram Bot / Google Apps Script / CRM)
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const btn = form.querySelector('button');
+      const data = Object.fromEntries(new FormData(form).entries());
+      btn.disabled = true;
+      btn.textContent = 'Отправляем…';
+      status.textContent = '';
+
+      if (!ENDPOINT) {
+        setTimeout(() => {
+          status.textContent = 'Спасибо! Заявка принята — свяжемся с вами в течение 24 часов.';
+          form.reset();
+          btn.disabled = false;
+          btn.textContent = 'Оставить заявку';
+        }, 800);
+        return;
+      }
+
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        status.textContent = 'Спасибо! Заявка принята — свяжемся с вами в течение 24 часов.';
+        form.reset();
+      } catch (err) {
+        status.textContent = 'Что-то пошло не так. Напишите нам напрямую.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Оставить заявку';
+      }
+    });
+  })();
+</script>
+</body>
+</html>
