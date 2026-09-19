@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-агенты, которые сами находят клиентов — вариант 7</title>
+<title>AI-агенты, которые сами находят клиентов — вариант 8</title>
 <meta name="description" content="Цифровые продажники — ищут, анализируют, пишут и отвечают. Поток клиентов без раздувания штата.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,11 +98,14 @@
     mix-blend-mode: screen;
     pointer-events: none;
     filter: saturate(1.1) contrast(1.05);
+    transform: scale(1.18);
+    transform-origin: center;
   }
   .hero-content {
     position: relative;
     z-index: 2;
-    max-width: 720px;
+    width: min(1440px, 96vw);
+    max-width: none;
     padding: 0 24px;
     text-align: center;
     opacity: 0;
@@ -120,6 +123,9 @@
     line-height: 1.12;
     letter-spacing: -0.02em;
     margin-bottom: 22px;
+    max-width: 1080px;
+    margin-left: auto;
+    margin-right: auto;
     color: var(--text);
     text-shadow: var(--text-shadow);
   }
@@ -461,10 +467,57 @@
 
   /* ============ АДАПТИВ ============ */
   @media (max-width: 900px) {
-    .brain-cards { top: 34vh; width: min(680px, 92vw); }
-    .cards { grid-template-columns: 1fr 1fr; gap: 22px; }
+    .brain { height: auto; min-height: 100svh; padding: 64px 0; }
+    .brain__sticky {
+      position: relative;
+      height: auto;
+      min-height: 0;
+      display: block;
+      overflow: hidden;
+    }
+    .brain-video { object-fit: cover; opacity: 0.2; }
+    .brain-glow { width: 130vmax; height: 130vmax; }
+    .brain-head,
+    .brain-cards {
+      position: relative;
+      top: auto;
+      left: auto;
+      right: auto;
+      width: min(680px, 92vw);
+      margin-left: auto;
+      margin-right: auto;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .brain-head { text-align: left; }
+    .brain-cards { margin-top: 34px; }
+    .cards { grid-template-columns: 1fr; gap: 0; }
     .cards-col:first-child .card:nth-child(n),
     .cards-col:last-child .card:nth-child(n) { grid-column: auto; grid-row: auto; }
+    .card { padding-bottom: 26px; }
+    .card h3 { font-size: 20px; }
+    .card__lead { font-size: 16px; }
+    .card__desc { font-size: 15px; }
+  }
+  @media (max-width: 640px) {
+    .hero { height: 180svh; }
+    .hero__sticky { height: 100svh; }
+    .earth-video { object-fit: cover; opacity: 0.78; transform: scale(1.32); }
+    .earth-glow { width: 125vmax; height: 125vmax; }
+    .hero-content { width: 92vw; padding: 0; }
+    .hero-title { font-size: clamp(30px, 9vw, 42px); margin-bottom: 18px; }
+    .hero-subtitle { font-size: 16px; line-height: 1.55; margin-bottom: 28px; }
+    .cta { padding: 14px 26px; }
+    .scroll-hint { top: auto; bottom: 24px; }
+
+    .brain-head,
+    .brain-cards { width: 92vw; }
+    .brain-head .eyebrow { font-size: 12px; }
+    .brain-head h2 { font-size: clamp(27px, 8vw, 36px); }
+    .brain-lead { font-size: 16px; margin: 0; }
+    .card { padding-bottom: 28px; }
+    .contact { padding: 80px 6vw 70px; }
+    .contact__info { gap: 20px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
