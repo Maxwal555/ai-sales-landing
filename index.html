@@ -467,15 +467,26 @@
 
   /* ============ АДАПТИВ ============ */
   @media (max-width: 900px) {
-    .brain { height: auto; min-height: 100svh; padding: 64px 0; }
+    .brain { height: auto; min-height: 100svh; padding: 64px 0 88px; }
     .brain__sticky {
       position: relative;
       height: auto;
       min-height: 0;
       display: block;
-      overflow: hidden;
+      overflow: visible;
     }
-    .brain-video { object-fit: cover; opacity: 0.2; }
+    .brain-video {
+      object-fit: contain;
+      opacity: 0.3;
+      width: 110vw;
+      height: 110vw;
+      max-width: none;
+      left: 50%;
+      top: -30px;
+      right: auto;
+      bottom: auto;
+      transform: translateX(-50%);
+    }
     .brain-glow { width: 130vmax; height: 130vmax; }
     .brain-head,
     .brain-cards {
@@ -491,9 +502,8 @@
     }
     .brain-head { text-align: left; }
     .brain-cards { margin-top: 34px; }
-    .cards { grid-template-columns: 1fr; gap: 0; }
-    .cards-col:first-child .card:nth-child(n),
-    .cards-col:last-child .card:nth-child(n) { grid-column: auto; grid-row: auto; }
+    .cards { display: block; }
+    .cards-col { display: block; }
     .card { padding-bottom: 26px; }
     .card h3 { font-size: 20px; }
     .card__lead { font-size: 16px; }
@@ -502,7 +512,18 @@
   @media (max-width: 640px) {
     .hero { height: 180svh; }
     .hero__sticky { height: 100svh; }
-    .earth-video { object-fit: cover; opacity: 0.78; transform: scale(1.32); }
+    .earth-video {
+      object-fit: contain;
+      opacity: 0.9;
+      width: 118vw;
+      height: 118vw;
+      max-width: none;
+      left: 50%;
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+    }
     .earth-glow { width: 125vmax; height: 125vmax; }
     .hero-content { width: 92vw; padding: 0; }
     .hero-title { font-size: clamp(30px, 9vw, 42px); margin-bottom: 18px; }
