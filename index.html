@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-агенты, которые сами находят клиентов — вариант 6</title>
+<title>AI-агенты, которые сами находят клиентов — вариант 7</title>
 <meta name="description" content="Цифровые продажники — ищут, анализируют, пишут и отвечают. Поток клиентов без раздувания штата.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,11 +11,12 @@
 <style>
   :root {
     --bg: #05070c;
-    --surface: rgba(255, 255, 255, 0.03);
-    --surface-hover: rgba(255, 255, 255, 0.06);
-    --border: rgba(255, 255, 255, 0.09);
-    --text: #eaf0f8;
-    --muted: #8b99ad;
+    --surface: rgba(7, 13, 23, 0.78);
+    --surface-hover: rgba(13, 24, 40, 0.92);
+    --border: rgba(166, 229, 255, 0.18);
+    --text: #f5fbff;
+    --muted: #c2d0df;
+    --text-shadow: 0 3px 22px rgba(0, 0, 0, 0.92);
     --cyan: #22d3ee;
     --cyan-2: #7ce7f7;
     --violet: #8b5cf6;
@@ -55,7 +56,9 @@
   .vignette {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at center, transparent 38%, rgba(5, 7, 12, 0.88) 100%);
+    background:
+      linear-gradient(90deg, rgba(5, 7, 12, 0.56) 0%, transparent 28%, transparent 72%, rgba(5, 7, 12, 0.56) 100%),
+      radial-gradient(ellipse at center, rgba(5, 7, 12, 0.10) 22%, rgba(5, 7, 12, 0.92) 100%);
     pointer-events: none;
   }
 
@@ -106,7 +109,10 @@
     transform: translateY(26px);
     will-change: opacity, transform;
   }
-  .hero-content .eyebrow { color: var(--cyan-2); }
+  .hero-content .eyebrow {
+    color: #9ff1ff;
+    text-shadow: 0 0 12px rgba(34, 211, 238, 0.9), 0 0 28px rgba(34, 211, 238, 0.5);
+  }
   .hero-title {
     font-family: var(--font-display);
     font-size: clamp(28px, 5.5vw, 60px);
@@ -114,7 +120,8 @@
     line-height: 1.12;
     letter-spacing: -0.02em;
     margin-bottom: 22px;
-    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+    color: var(--text);
+    text-shadow: var(--text-shadow);
   }
   .hero-title span {
     background: linear-gradient(90deg, var(--cyan-2), var(--cyan));
@@ -123,24 +130,49 @@
     color: transparent;
   }
   .hero-subtitle {
-    color: var(--muted);
+    color: #eef6ff;
     font-size: 18px;
     max-width: 520px;
     margin: 0 auto 34px;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.7);
+    font-weight: 500;
+    text-shadow: var(--text-shadow);
   }
   .cta {
+    position: relative;
+    overflow: hidden;
     display: inline-block;
     padding: 15px 32px;
     border-radius: 12px;
-    background: linear-gradient(135deg, var(--cyan), #0ea5c8);
+    background: linear-gradient(120deg, #22d3ee, #7ce7f7, #22d3ee, #0ea5c8);
+    background-size: 300% 100%;
+    animation: ctaShimmer 4s ease infinite;
     color: #021014;
     font-weight: 600;
     font-size: 16px;
     text-decoration: none;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(34, 211, 238, 0.35); }
+  .cta::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 55%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: ctaShine 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(34, 211, 238, 0.45); }
+  @keyframes ctaShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes ctaShine {
+    0% { left: -120%; }
+    55%, 100% { left: 130%; }
+  }
 
   /* стрелка — в самом верху */
   .scroll-hint {
@@ -154,7 +186,8 @@
     gap: 10px;
     z-index: 6;
     text-decoration: none;
-    color: var(--muted);
+    color: #e2f6fb;
+    text-shadow: var(--text-shadow);
     will-change: opacity;
   }
   .scroll-hint__ring {
@@ -260,59 +293,57 @@
     opacity: 0;
     will-change: opacity, transform;
   }
-  .brain-head .eyebrow { color: var(--violet-2); }
+  .brain-head .eyebrow {
+    color: #dccbff;
+    font-size: 15px;
+    text-shadow: 0 0 16px rgba(139, 92, 246, 0.6);
+  }
   .brain-head h2 {
     font-family: var(--font-display);
     font-size: clamp(24px, 4vw, 42px);
     line-height: 1.15;
     margin-bottom: 16px;
+    color: var(--text);
+    text-shadow: var(--text-shadow);
   }
   .brain-lead {
-    color: var(--muted);
+    color: var(--text);
     font-size: 17px;
+    font-weight: 600;
+    text-shadow: var(--text-shadow);
     max-width: 620px;
     margin: 0 auto;
   }
   .brain-cards {
     position: absolute;
-    bottom: 7vh;
+    top: clamp(250px, 36vh, 390px);
+    bottom: auto;
     left: 0;
     right: 0;
     margin: 0 auto;
-    width: min(1100px, 92vw);
+    width: min(1440px, 96vw);
     z-index: 3;
     opacity: 0;
     will-change: opacity, transform;
   }
   .cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: minmax(210px, 280px) minmax(280px, 1fr) minmax(210px, 280px);
+    grid-template-rows: repeat(2, auto);
+    gap: 0;
+    align-items: start;
     text-align: left;
   }
+  .cards-col {
+    display: contents;
+  }
+  .cards-col:first-child .card:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .cards-col:first-child .card:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .cards-col:last-child .card:nth-child(1) { grid-column: 3; grid-row: 1; }
+  .cards-col:last-child .card:nth-child(2) { grid-column: 3; grid-row: 2; }
   .card {
-    background: rgba(8, 12, 20, 0.55);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 26px 24px;
-    backdrop-filter: blur(8px);
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    padding: 0 0 26px;
   }
-  .card:hover { border-color: rgba(179, 157, 251, 0.35); background: var(--surface-hover); transform: translateY(-4px); }
-  .card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--violet), transparent);
-    opacity: 0;
-    transition: opacity 0.25s ease;
-  }
-  .card:hover::before { opacity: 1; }
   .card__num {
     font-family: var(--font-display);
     font-size: 13px;
@@ -321,8 +352,9 @@
     letter-spacing: 0.1em;
     margin-bottom: 12px;
   }
-  .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
-  .card p { color: var(--muted); font-size: 15px; font-weight: 500; }
+  .card h3 { color: var(--text); font-size: 21px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; text-shadow: var(--text-shadow); }
+  .card__lead { color: var(--text); font-size: 17px; font-weight: 700; margin-bottom: 7px; line-height: 1.35; text-shadow: var(--text-shadow); }
+  .card__desc { color: var(--muted); font-size: 16px; font-weight: 500; line-height: 1.55; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75); }
 
   /* ============================================================
      БЛОК 3 — КОНТАКТЫ / ЗАЯВКА
@@ -331,7 +363,7 @@
     position: relative;
     padding: 130px 8vw 110px;
     text-align: center;
-    background: var(--bg);
+    background: radial-gradient(ellipse at top, #0a1726 0%, var(--bg) 52%);
   }
   .contact__dots {
     position: absolute;
@@ -350,7 +382,7 @@
     line-height: 1.15;
     margin-bottom: 16px;
   }
-  .contact__lead { color: var(--muted); margin-bottom: 40px; font-size: 17px; }
+  .contact__lead { color: var(--muted); margin-bottom: 40px; font-size: 17px; font-weight: 500; }
 
   .form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
   .form input[type="text"],
@@ -366,7 +398,7 @@
     font-size: 16px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  .form input::placeholder { color: #5b6a7d; }
+  .form input::placeholder { color: #94a9bc; }
   .form input:focus {
     outline: none;
     border-color: var(--cyan);
@@ -418,19 +450,29 @@
     font-size: 11px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #5b6a7d;
+    color: #9db2c6;
     margin-bottom: 4px;
+  }
+  .contact__note {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--muted);
   }
 
   /* ============ АДАПТИВ ============ */
   @media (max-width: 900px) {
-    .cards { grid-template-columns: 1fr; }
+    .brain-cards { top: 34vh; width: min(680px, 92vw); }
+    .cards { grid-template-columns: 1fr 1fr; gap: 22px; }
+    .cards-col:first-child .card:nth-child(n),
+    .cards-col:last-child .card:nth-child(n) { grid-column: auto; grid-row: auto; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .scroll-hint__ring::before,
     .scroll-hint__chevron,
-    .scroll-hint__ring { animation: none; }
+    .scroll-hint__ring,
+    .cta,
+    .cta::after { animation: none; }
     .hero-content, .brain-head, .brain-cards { opacity: 1 !important; transform: none !important; }
   }
 </style>
@@ -473,27 +515,40 @@
 
       <div class="brain-head" id="brainHead">
         <p class="eyebrow">Что мы делаем</p>
-        <h2>Три направления, которые продают за вас</h2>
+        <h2>Четыре направления, которые продают за вас</h2>
         <p class="brain-lead">Подключаем AI к каждому этапу продаж — от поиска клиента до готового лендинга.</p>
       </div>
 
       <div class="brain-cards" id="brainCards">
         <div class="cards">
-          <article class="card">
-            <div class="card__num">01</div>
-            <h3>AI-продавцы</h3>
-            <p>Цифровые продажники сами ищут клиентов, находят контакты, анализируют, подходит ли компания, пишут письма и отвечают.</p>
-          </article>
-          <article class="card">
-            <div class="card__num">02</div>
-            <h3>Цифровой след</h3>
-            <p>Улучшаем цифровой след компании: посты в нужных источниках и перенастройка сайта — чтобы вас находили.</p>
-          </article>
-          <article class="card">
-            <div class="card__num">03</div>
-            <h3>Создание лендинга</h3>
-            <p>Разрабатываем лендинг, который превращает трафик в заявки и продаёт вместо вас.</p>
-          </article>
+          <div class="cards-col">
+            <article class="card">
+              <div class="card__num">01</div>
+              <h3>AI-продавцы</h3>
+              <p class="card__lead">Полный цикл продаж под ключ:</p>
+              <p class="card__desc">агент сам ищет клиентов, наполняет базу, отправляет персонализированные письма и ведёт переписку. Вы получаете поток обращений без рутины.</p>
+            </article>
+            <article class="card">
+              <div class="card__num">02</div>
+              <h3>Цифровой след</h3>
+              <p class="card__lead">Обновляем или создаём сайт под поиск AI-агентами:</p>
+              <p class="card__desc">люди всё чаще спрашивают нейросети, а не ищут сами. Делаем так, чтобы агенты вас находили, и усиливаем след публикациями в нужных группах и каналах.</p>
+            </article>
+          </div>
+          <div class="cards-col">
+            <article class="card">
+              <div class="card__num">03</div>
+              <h3>Создание лендинга</h3>
+              <p class="card__lead">Разрабатываем лендинг,</p>
+              <p class="card__desc">который превращает трафик в заявки и продаёт вместо вас.</p>
+            </article>
+            <article class="card">
+              <div class="card__num">04</div>
+              <h3>Автоматизация процессов</h3>
+              <p class="card__lead">Автоматизируем рутину:</p>
+              <p class="card__desc">AI-агенты и нейросети берут на себя отчёты, документы, согласования — без ручного труда.</p>
+            </article>
+          </div>
         </div>
       </div>
     </div>
@@ -519,10 +574,9 @@
       </form>
 
       <div class="contact__info">
-        <div><span class="label">Telegram</span><a href="https://t.me/your_username">@your_username</a></div>
-        <div><span class="label">Email</span><a href="mailto:hello@yourdomain.com">hello@yourdomain.com</a></div>
-        <div><span class="label">Телефон</span><a href="tel:+700****0000">+7 (000) 000-00-00</a></div>
+        <div><span class="label">Email</span><a href="mailto:info@stroy-otchet.ru">info@stroy-otchet.ru</a></div>
       </div>
+      <p class="contact__note">Заявки приходят на info@stroy-otchet.ru</p>
     </div>
   </section>
 
